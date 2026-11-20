@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d0f">
+  <meta name="description" content="A plain-English, soup-to-nuts field guide to the experimental Bloodborne native ports for Windows, Linux, Steam Deck, and Apple silicon.">
+  <title>Bloodborne native port field guide</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the guide</a>
+  <header class="site-header" data-header>
+    <a class="wordmark" href="#top"><span class="rune" aria-hidden="true">ᛉ</span><span>Bloodborne Port Field Guide</span></a>
+    <nav class="site-nav" aria-label="Guide sections">
+      <a href="#primer">What it is</a><a href="#status">Status</a><a href="#prepare">Prepare</a><a href="#setup">Setup</a><a href="#tune">Tune</a><a href="#elsewhere">Other ports</a><a href="#sources">Sources</a>
+    </nav>
+    <a class="header-cta" href="#setup">Choose a platform <span>↓</span></a>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <img class="hero-image" src="user-bloodborne-example.webp" alt="Bloodborne running in ultrawide at 150 frames per second, as shown by a performance overlay">
+      <div class="hero-veil"></div>
+      <div class="hero-content shell">
+        <p class="eyebrow"><span></span> Independent field report · 20 Nov 2026</p>
+        <h1 id="hero-title">The hunt,<br><em>translated.</em></h1>
+        <p class="hero-deck">A soup-to-nuts guide to running a legally dumped copy of <strong>Bloodborne 1.09</strong> through the experimental native ports—plus the honest explanation of what “decomp,” “recomp,” and “no emulator” mean.</p>
+        <div class="hero-actions"><a class="button primary" href="#primer">Start with the plain-English primer</a><a class="button glass" href="#setup">Go straight to setup</a></div>
+        <div class="hero-proof"><span><b>150 FPS</b> in the supplied capture</span><span><b>32:9</b> aspect-ratio support</span><span><b>BYO</b> decrypted 1.09 dump</span></div>
+      </div>
+      <p class="hero-credit">User-supplied capture · Bloodborne imagery © Sony Interactive Entertainment / FromSoftware</p>
+    </section>
+
+    <section class="status-rail" aria-label="Current recommended routes"><div class="shell status-grid">
+      <div class="status-lead"><small>Current routes</small><b>Experimental, playable</b></div>
+      <article><span class="platform-icon win">⊞</span><div><b>Windows</b><small>bbport 0.7 · packaged ZIP</small></div></article>
+      <article><span class="platform-icon linux">⌁</span><div><b>Linux / Deck</b><small>bbport 0.7 · AppImage</small></div></article>
+      <article><span class="platform-icon mac">●</span><div><b>Apple silicon</b><small>bloodborne-mac 0.10.1 · DMG</small></div></article>
+      <article><span class="platform-icon dump">◆</span><div><b>Game input</b><small>clean decrypted v1.09 folder</small></div></article>
+    </div></section>
+
+    <section class="section primer" id="primer" aria-labelledby="primer-title"><div class="shell">
+      <div class="section-heading split-heading"><div><p class="kicker">01 · The mental model</p><h2 id="primer-title">It is a native port. It is not a source-code decomp.</h2></div><p class="lede">Bloodborne makes the vocabulary unusually interesting. Its PlayStation 4 CPU code is already x86-64—the same instruction family used by ordinary Windows and Linux PCs. The main project builds a new world around the original executable.</p></div>
+
+      <div class="truth-card"><div class="truth-mark">✦</div><div><p class="mini-kicker">The useful analogy</p><h3>bbport is like Wine + DXVK, built for one game.</h3><p>The game’s x86-64 code executes on the CPU. A small, game-specific runtime answers the PS4 system calls Bloodborne uses. A custom graphics layer translates PS4 GPU commands and GCN shaders into Vulkan. It is narrower than an emulator and more targeted than a general compatibility layer.</p></div></div>
+
+      <div class="architecture" aria-label="Bloodborne native port architecture">
+        <div class="arch-source"><span class="disc-glyph"></span><b>Your decrypted Bloodborne 1.09 folder</b><small><code>eboot.bin</code> + modules + assets</small></div>
+        <div class="arch-branches">
+          <article><p class="branch-label">Windows / Linux · x86-64</p><div class="flow-row"><span>Game CPU code</span><i>→</i><strong>runs directly</strong><i>→</i><span>Your CPU</span></div><p>The executable is converted offline into a flat memory image. PS4 C/Fios pieces are linked in; the loader maps it and jumps into the game.</p></article>
+          <article><p class="branch-label">Graphics · every platform</p><div class="flow-row"><span>PS4 PM4 + GCN</span><i>→</i><strong>translated</strong><i>→</i><span>Vulkan / Metal</span></div><p>Draw commands become modern GPU commands. Shaders become SPIR-V on Vulkan, or Metal-compatible programs in the Apple-silicon project.</p></article>
+          <article><p class="branch-label">macOS · ARM64</p><div class="flow-row"><span>x86-64 game code</span><i>→</i><strong>JIT or AOT</strong><i>→</i><span>Apple silicon</span></div><p>The separate Mac project translates instructions as the game runs by default, or compiles native ARM64 code ahead of time from your copy.</p></article>
+        </div>
+      </div>
+
+      <div class="term-grid">
+        <article><span class="term-letter">E</span><p class="mini-kicker">General-purpose</p><h3>Emulation</h3><p>Recreates a console broadly enough to run many games. shadPS4 loads PS4 executables, replaces system services, and translates graphics at runtime.</p></article>
+        <article><span class="term-letter">R</span><p class="mini-kicker">Machine code → machine code</p><h3>Recompilation</h3><p>Transforms an old binary into host-native code before or during play. The Mac fork’s optional x86-64→ARM64 ahead-of-time path is a literal example.</p></article>
+        <article><span class="term-letter">D</span><p class="mini-kicker">Recovered source</p><h3>Decompilation</h3><p>Humans reconstruct readable C/C++ that reproduces the old program. A decomp is source recovery—not automatically a player-ready port.</p></article>
+        <article><span class="term-letter">P</span><p class="mini-kicker">Game-specific product</p><h3>Native port</h3><p>Adapts one game to current OSes and APIs. “Native” describes where the work ends up; it does not mean every old-platform assumption vanished.</p></article>
+      </div>
+      <aside class="plain-callout"><span>i</span><div><h3>So should you call Bloodborne PC a recomp?</h3><p>Casually, it belongs in the same scene. Technically, Windows/Linux bbport is a game-specific native compatibility port: the CPU code already matches x86-64, while PS4 services and graphics are replaced or translated. The Apple-silicon fork adds a real CPU translator and optional ahead-of-time recompiler.</p></div></aside>
+    </div></section>
+
+    <section class="section status-section" id="status" aria-labelledby="status-title"><div class="shell">
+      <div class="section-heading"><p class="kicker">02 · State of the hunt</p><h2 id="status-title">Impressive. Playable. Still experimental.</h2><p class="lede">This is not a commercial PC remaster and not yet a “set it and forget it” release. Use tagged packages, keep backups, and expect hardware-specific rough edges.</p></div>
+      <div class="status-cards">
+        <article class="status-card recommended"><div class="status-top"><span class="platform-icon win">⊞</span><span class="pill good">Best-supported path</span></div><p class="mini-kicker">deadinside28/bloodborne_pc</p><h3>bbport 0.7 · Windows</h3><p>Windows 10/11 x86-64 package, Vulkan 1.3, WPF launcher, portable data, controller and keyboard/mouse, mods, online pools, FSR and optional DLSS paths.</p><a href="https://github.com/deadinside28/bloodborne_pc/releases/tag/0.7">Official 0.7 release <span>↗</span></a></article>
+        <article class="status-card"><div class="status-top"><span class="platform-icon linux">⌁</span><span class="pill good">Steam Deck tested</span></div><p class="mini-kicker">Same upstream</p><h3>bbport 0.7 · Linux</h3><p>One-file AppImage or folder tarball. AMD/RADV and Steam Deck are the most thoroughly tested; NVIDIA and Intel rely more on player driver reports.</p><a href="https://github.com/deadinside28/bloodborne_pc/releases/tag/0.7">Official Linux downloads <span>↗</span></a></article>
+        <article class="status-card"><div class="status-top"><span class="platform-icon mac">●</span><span class="pill caution">Separate project</span></div><p class="mini-kicker">bloodborne-native/bloodborne-mac</p><h3>bloodborne-mac 0.10.1</h3><p>Apple-silicon app for macOS 15+, Metal by default, x86-64→ARM64 translation, optional AOT recompilation, and its own launcher/issues.</p><a href="https://github.com/bloodborne-native/bloodborne-mac/releases/latest">Official Mac release <span>↗</span></a></article>
+      </div>
+      <div class="reality-grid"><div><b>Confirmed</b><p>Boot, saves, sound, input, several areas, high frame rates, ultrawide, shader cache, and player-tested co-op paths.</p></div><div><b>Not guaranteed</b><p>The bbport author has not verified a full playthrough. Hardware coverage is uneven. Mac reports measurements from very few systems.</p></div><div><b>Best practice</b><p>Keep the original dump and PS4 save as archival baselines. Do not make an experimental port your only copy.</p></div></div>
+    </div></section>
+
+    <section class="section prepare" id="prepare" aria-labelledby="prepare-title"><div class="shell">
+      <div class="section-heading split-heading"><div><p class="kicker">03 · Prepare the game</p><h2 id="prepare-title">One clean folder. Version 1.09.</h2></div><p class="lede">The ports do not use a PKG directly and do not ship Sony or FromSoftware files. They expect a decrypted directory made from your own base game and its 1.09 update.</p></div>
+      <div class="prep-layout">
+        <ol class="steps steps-large">
+          <li><span>01</span><div><h3>Start with your own decrypted dump.</h3><p>This guide provides no ROM/PKG links, keys, firmware, or copyrighted game data. Dumping rules vary; follow your local law.</p></div></li>
+          <li><span>02</span><div><h3>Keep originals untouched.</h3><p>Make a working copy of the base-game folder. Common IDs include <code>CUSA03173</code> (EU GOTY) and <code>CUSA00900</code> (US). Validation uses the executable, not just the name.</p></div></li>
+          <li><span>03</span><div><h3>Merge update 1.09 over the copy.</h3><p>Copy everything from the decrypted 1.09 update into the base copy and replace files. This must replace <code>eboot.bin</code> and update <code>sce_sys</code>.</p></div></li>
+          <li><span>04</span><div><h3>Check the resulting shape.</h3><p>Select the folder that directly contains <code>eboot.bin</code>, <code>sce_sys/</code>, and <code>dvdroot_ps4/</code>. Avoid an extra nested CUSA folder.</p></div></li>
+          <li><span>05</span><div><h3>Use a clean executable.</h3><p>An old 60-FPS patch baked into <code>eboot.bin</code> is rejected and can crash at the gestures menu. bbport supplies its own timing hooks.</p></div></li>
+        </ol>
+        <aside class="folder-card"><p class="mini-kicker">Expected working copy</p><h3>⌄ CUSA03173/</h3><ul><li><span>◆</span><b>eboot.bin</b><small>clean 1.09 executable</small></li><li><span>▰</span><b>sce_sys/</b><small>metadata, updated to 1.09</small></li><li><span>▰</span><b>sce_module/</b><small>PS4 modules used by the game</small></li><li><span>▰</span><b>dvdroot_ps4/</b><small>Bloodborne assets and data</small></li></ul></aside>
+      </div>
+      <div class="edition-note"><b>The Old Hunters</b><p>GOTY editions include it. On Windows/Linux, separate add-on dumps use <code>user/addcont/&lt;title-id&gt;/&lt;entitlement-label&gt;/</code>; upstream’s example is <code>user/addcont/CUSA03173/SPEXPANSIONDLC03</code>. The current Mac guide says separate add-on packages are not loaded, so GOTY is simplest there.</p></div>
+    </div></section>
+
+    <section class="section setup" id="setup" aria-labelledby="setup-title"><div class="shell">
+      <div class="section-heading"><p class="kicker">04 · Setup, soup to nuts</p><h2 id="setup-title">Pick the machine in front of you.</h2><p class="lede">Windows and Linux use bbport. The Mac app is a related fork with a different architecture and support channel. Keep issue reports separate.</p></div>
+      <div class="tabs" data-tabs>
+        <div class="tab-list" role="tablist" aria-label="Operating system">
+          <button id="tab-windows" role="tab" aria-selected="true" aria-controls="windows" tabindex="0" data-tab="windows"><span>⊞</span> Windows <small>ZIP · easiest</small></button>
+          <button id="tab-linux" role="tab" aria-selected="false" aria-controls="linux" tabindex="-1" data-tab="linux"><span>⌁</span> Linux / Deck <small>AppImage</small></button>
+          <button id="tab-macos" role="tab" aria-selected="false" aria-controls="macos" tabindex="-1" data-tab="macos"><span>●</span> macOS <small>Apple silicon</small></button>
+        </div>
+
+        <section class="tab-panel" id="windows" role="tabpanel" aria-labelledby="tab-windows" data-panel="windows">
+          <div class="path-header"><div><p class="path-label">Recommended desktop path</p><h3>bbport 0.7 for Windows</h3></div><div class="requirements"><span>Windows 10 / 11</span><span>x86-64</span><span>Vulkan 1.3</span><span>Current GPU driver</span></div></div>
+          <div class="path-grid"><div>
+            <ol class="steps path-steps">
+              <li><span>01</span><div><h4>Update the GPU driver.</h4><p>Install current AMD Adrenalin, NVIDIA GeForce, or Intel Arc drivers. The port needs Vulkan 1.3 and stops when required memory features are missing.</p></div></li>
+              <li><span>02</span><div><h4>Download the official tagged ZIP.</h4><p>From the <a href="https://github.com/deadinside28/bloodborne_pc/releases/tag/0.7">0.7 release</a>, get <code>Bloodborne-bbport-0.7-windows-x64.zip</code> and <code>SHA256SUMS</code>.</p><div class="code-block"><button data-copy>Copy</button><pre><code>Get-FileHash .\Bloodborne-bbport-0.7-windows-x64.zip -Algorithm SHA256</code></pre></div><p class="code-note">Compare the hash with the matching <code>SHA256SUMS</code> line.</p></div></li>
+              <li><span>03</span><div><h4>Extract somewhere writable.</h4><p>Use a normal folder such as <code>C:\Games\bbport</code>, not Program Files. Start <code>Bloodborne.exe</code>.</p></div></li>
+              <li><span>04</span><div><h4>Select the folder with <code>eboot.bin</code>.</h4><p>Review the detected version, press <strong>Play</strong>, and let first-run preparation finish. Do not select the ZIP or parent Downloads folder.</p></div></li>
+              <li><span>05</span><div><h4>Establish a safe baseline.</h4><p>Use monitor output resolution, 60 FPS, FSR 3.1 Quality (or native at 1080p), default effects, and no mods. Reach Central Yharnam; save, quit, and reload.</p></div></li>
+              <li><span>06</span><div><h4>Back up the portable data.</h4><p><code>user\</code> has saves/cache; <code>bbport.ini</code> settings; <code>out\</code> prepared files; <code>logs\</code> one report per run.</p></div></li>
+            </ol>
+            <div class="path-actions"><a class="button primary" href="https://github.com/deadinside28/bloodborne_pc/releases/tag/0.7">Get official 0.7 ↗</a><a class="button outline" href="https://github.com/deadinside28/bloodborne_pc">Upstream README ↗</a></div>
+          </div><aside class="path-aside">
+            <div class="aside-card accent"><p class="mini-kicker">Your fast-stick fix</p><h4>Lower each camera axis</h4><p>Open <strong>Controls → Camera</strong>, or press <kbd>Insert</kbd> / hold <kbd>L3</kbd>+<kbd>R3</kbd> in game. Start here:</p><div class="setting-pair"><span>Horizontal <b>0.70</b></span><span>Vertical <b>0.55</b></span></div><p>Move in 0.05 steps. Range: 0.25–2.00. Vertical often feels faster, so keep it below horizontal.</p></div>
+            <div class="aside-card"><p class="mini-kicker">Manual fallback</p><h4>Edit <code>bbport.ini</code></h4><div class="code-block compact"><button data-copy>Copy</button><pre><code>camera_speed_x=0.70
+camera_speed_y=0.55</code></pre></div><p>Close the game first. Disable duplicate Steam Input/remapper layers before changing dead zones.</p></div>
+          </aside></div>
+        </section>
+
+        <section class="tab-panel" id="linux" role="tabpanel" aria-labelledby="tab-linux" data-panel="linux" hidden>
+          <div class="path-header"><div><p class="path-label">Packaged Linux route</p><h3>bbport 0.7 AppImage</h3></div><div class="requirements"><span>x86-64 Linux</span><span>Vulkan 1.3</span><span>AMD/RADV best tested</span><span>Steam Deck tested</span></div></div>
+          <div class="path-grid"><div>
+            <ol class="steps path-steps">
+              <li><span>01</span><div><h4>Use a current Vulkan driver.</h4><p>Current Mesa/RADV is upstream’s best-tested AMD route. NVIDIA and Intel behavior is more driver/report dependent.</p></div></li>
+              <li><span>02</span><div><h4>Get the official AppImage and checksum.</h4><p>Download <code>Bloodborne-bbport-0.7-x86_64.AppImage</code> plus <code>SHA256SUMS</code>.</p><div class="code-block"><button data-copy>Copy</button><pre><code>sha256sum Bloodborne-bbport-0.7-x86_64.AppImage</code></pre></div></div></li>
+              <li><span>03</span><div><h4>Make it executable and open it.</h4><div class="code-block"><button data-copy>Copy</button><pre><code>chmod +x Bloodborne-bbport-0.7-x86_64.AppImage
+./Bloodborne-bbport-0.7-x86_64.AppImage</code></pre></div></div></li>
+              <li><span>04</span><div><h4>Choose the merged 1.09 folder.</h4><p>Select the directory with <code>eboot.bin</code>. Packaged data defaults to <code>~/.local/share/bbport</code>. Let initial shaders finish.</p></div></li>
+              <li><span>05</span><div><h4>Steam Deck: add it to Steam.</h4><p>In Desktop Mode add the AppImage as a non-Steam game; return to Gaming Mode and use Steam Input. Hold L3+R3 for the overlay.</p></div></li>
+              <li><span>06</span><div><h4>Build source only when needed.</h4><div class="code-block"><button data-copy>Copy</button><pre><code>git clone --recursive https://github.com/deadinside28/bloodborne_pc.git bbport
+cd bbport
+bash build.sh
+BB_GAME_DIR=/path/to/CUSA03173 bash run.sh</code></pre></div></div></li>
+            </ol><div class="path-actions"><a class="button primary" href="https://github.com/deadinside28/bloodborne_pc/releases/tag/0.7">Get official 0.7 ↗</a></div>
+          </div><aside class="path-aside"><div class="aside-card accent"><p class="mini-kicker">Deck baseline</p><h4>720p · 30 or 60 FPS</h4><p>Start without frame generation. Add FSR 4/4.1.1 or experimental FSR 3.1 frame generation only after the base route is stable.</p></div><div class="aside-card"><p class="mini-kicker">Folder alternative</p><h4><code>Bloodborne.sh</code></h4><p>If AppImage integration fights you, unpack the official <code>linux-x86_64.tar.zst</code> and run <code>Bloodborne.sh</code>.</p></div></aside></div>
+        </section>
+
+        <section class="tab-panel" id="macos" role="tabpanel" aria-labelledby="tab-macos" data-panel="macos" hidden>
+          <div class="path-header"><div><p class="path-label">Separate Apple-silicon project</p><h3>bloodborne-mac 0.10.1</h3></div><div class="requirements"><span>M1 or newer</span><span>macOS 15+</span><span>Metal default</span><span>Experimental</span></div></div>
+          <div class="path-grid"><div>
+            <ol class="steps path-steps">
+              <li><span>01</span><div><h4>Confirm Apple silicon and macOS 15+.</h4><p>Intel Macs are not supported by this route. It is a separate project with its own releases and issues.</p></div></li>
+              <li><span>02</span><div><h4>Download the official ARM64 DMG.</h4><p>Get <code>bloodborne_mac-&lt;version&gt;-arm64.dmg</code> from the <a href="https://github.com/bloodborne-native/bloodborne-mac/releases/latest">latest release</a>. This report verified 0.10.1.</p></div></li>
+              <li><span>03</span><div><h4>Install and approve once.</h4><p>Drag Bloodborne to Applications. Control-click it and choose <strong>Open → Open</strong>, or use <strong>Privacy &amp; Security → Open Anyway</strong>. Do not disable Gatekeeper globally.</p></div></li>
+              <li><span>04</span><div><h4>Select the 1.09 folder and play.</h4><p>The Home tab checks edition, version, and decryption. First start compiles shaders for a few minutes; later starts use cache.</p></div></li>
+              <li><span>05</span><div><h4>Start with translator + Metal.</h4><p>The x86-64 game code translates to ARM64 as it runs. Optional ahead-of-time recompilation is an advanced optimization after the default route works.</p></div></li>
+              <li><span>06</span><div><h4>Back up the app data.</h4><p><code>~/Library/Application Support/bloodborne_mac</code> contains settings, saves, cache, mods, patches, and <code>logs/last.log</code>. The launcher also backs up saves before each start.</p></div></li>
+            </ol><div class="path-actions"><a class="button primary" href="https://github.com/bloodborne-native/bloodborne-mac/releases/latest">Get the Mac app ↗</a><a class="button outline" href="https://github.com/bloodborne-native/bloodborne-mac/blob/main/docs/guide/installation.md">Install guide ↗</a></div>
+          </div><aside class="path-aside"><div class="aside-card accent"><p class="mini-kicker">Measured, not promised</p><h4>48–49 FPS on one M3 Pro</h4><p>That is the project’s 1080p Iosefka’s Clinic figure. Only one Mac was measured; it is a data point, not a universal benchmark.</p></div><div class="aside-card"><p class="mini-kicker">Memory pressure</p><h4>Use Low memory mode</h4><p>0.10.1 caps its low-memory GPU cache at 2 GB. Useful on 8/16 GB systems where CPU and GPU share RAM.</p></div></aside></div>
+        </section>
+      </div>
+    </div></section>
+
+    <section class="section tune" id="tune" aria-labelledby="tune-title"><div class="shell">
+      <div class="section-heading split-heading"><div><p class="kicker">05 · Tune without breaking it</p><h2 id="tune-title">Change one layer at a time.</h2></div><p class="lede">The port exposes settings the original game never had. That is the appeal—and the fastest way to create a bad combination.</p></div>
+      <div class="tuning-grid"><article><span>1</span><h3>Baseline</h3><p>60 FPS, default effects, one controller, no mods.</p></article><article><span>2</span><h3>Output</h3><p>Monitor, aspect ratio, resolution, cap.</p></article><article><span>3</span><h3>Input</h3><p>Per-axis camera speed, mapping, dead zone.</p></article><article><span>4</span><h3>Reconstruct</h3><p>FSR 3.1 first; optional FSR 4 or DLSS later.</p></article><article><span>5</span><h3>Extras</h3><p>Effects, online, mods and frame generation last.</p></article></div>
+      <div class="feature-grid">
+        <article><p class="mini-kicker">Display</p><h3>Unlocked timing &amp; any aspect</h3><p>4:3 through 32:9, wide cinematics, HUD placement, 30/60/90 and uncapped modes. <kbd>F3</kbd> toggles a 30-FPS safety cap for problem cinematics.</p></article>
+        <article><p class="mini-kicker">Reconstruction</p><h3>FSR, DLSS, AA &amp; sharpening</h3><p>FSR 3.1 needs no proprietary models. FSR 4 and DLSS have GPU, SDK, DLL, or driver requirements; unsupported choices fall back.</p></article>
+        <article><p class="mini-kicker">Input</p><h3>Controller, mouse &amp; keyboard</h3><p>SDL3 pads, remapping, per-axis camera speed, direct mouse camera, pointer menus, and Souls-like keyboard defaults. <kbd>F1</kbd> releases the mouse.</p></article>
+        <article><p class="mini-kicker">Preservation</p><h3>Portable saves &amp; useful logs</h3><p>Backups, retained shader cache, SHA-256 sums, versioned releases, trophy records, and an input validator that checks the executable.</p></article>
+        <article><p class="mini-kicker">Modding</p><h3>Overlays, patches &amp; load order</h3><p>Loose-file mods stay separate from the original dump. shadPS4-format XML patches can be toggled in the launcher. Add one, test one.</p></article>
+        <article><p class="mini-kicker">Online</p><h3>Community network pools</h3><p>Seamless Hunt offers BBSC co-op; The Hunter’s Dream uses Discord sign-in without BBSC. These are unofficial services, not PSN.</p></article>
+      </div>
+      <figure class="result-figure"><img src="user-bloodborne-example.webp" alt="User-provided Bloodborne result showing ultrawide output and a 150 FPS counter"><figcaption><div><p class="mini-kicker">The supplied result</p><h3>Ultrawide · 150 FPS overlay · FSR 3.1</h3></div><p>The capture demonstrates the headline enhancements. It does not prove full-game stability; test save/reload, cinematics, bosses, and area transitions separately.</p></figcaption></figure>
+    </div></section>
+
+    <section class="section trouble" id="troubleshoot" aria-labelledby="trouble-title"><div class="shell">
+      <div class="section-heading"><p class="kicker">06 · Troubleshooting</p><h2 id="trouble-title">Start with the first wrong assumption.</h2></div>
+      <div class="faq">
+        <details open><summary><span>Right stick sensitivity is far too high</span><b>+</b></summary><div><p>Launcher <strong>Controls → Camera</strong>, or <kbd>Insert</kbd> / L3+R3 in game. Try horizontal 0.70 and vertical 0.55, then 0.05 steps. Keys: <code>camera_speed_x</code>, <code>camera_speed_y</code>; range 0.25–2.00. Disable duplicate Steam Input/remapper layers first.</p></div></details>
+        <details><summary><span>The launcher says the game needs 1.09</span><b>+</b></summary><div><p>You selected base 1.00 or merged only part of the update. Copy the complete decrypted update over a working base copy, replacing <code>eboot.bin</code> and <code>sce_sys</code>.</p></div></details>
+        <details><summary><span>The executable is rejected as modified</span><b>+</b></summary><div><p>Use a clean 1.09 <code>eboot.bin</code>. Old dumps may have a 60-FPS patch baked in; bbport rejects it because its own timing hooks replace that patch.</p></div></details>
+        <details><summary><span>“STOP: the GPU driver cannot use the game’s memory in place”</span><b>+</b></summary><div><p>Update the GPU driver and reboot. 0.7 has one memory model and intentionally stops if the required Vulkan path cannot work. Report with the newest log plus exact GPU/driver versions.</p></div></details>
+        <details><summary><span>First launch takes a long time or stutters</span><b>+</b></summary><div><p>Shader recipes compile at startup. Let the first pass finish; a repeat session should compile nothing unless the cache format changed. Keep the cache writable.</p></div></details>
+        <details><summary><span>Performance fell after enabling enhancements</span><b>+</b></summary><div><p>Disable frame generation, use FSR 3.1 Quality or native, cap 60, restore default effects, and remove mods. Native AA can be slower than no AA.</p></div></details>
+        <details><summary><span>A cinematic breaks above 30 FPS</span><b>+</b></summary><div><p>Press <kbd>F3</kbd> for the 30-FPS safety cap. Upstream specifically calls out some cinematics, including Laurence’s, as safest at 30.</p></div></details>
+        <details><summary><span>macOS blocks the app</span><b>+</b></summary><div><p>Control-click → Open, or Privacy &amp; Security → Open Anyway after one attempt. Do not disable Gatekeeper globally or paste quarantine-removal commands from strangers.</p></div></details>
+        <details><summary><span>A mod corrupts visuals or stops loading</span><b>+</b></summary><div><p>Disable all mods and XML patches, confirm clean play, then restore one at a time. Avoid emulator-specific memory patches in bbport.</p></div></details>
+      </div>
+    </div></section>
+
+    <section class="section elsewhere" id="elsewhere" aria-labelledby="elsewhere-title"><div class="shell">
+      <div class="section-heading split-heading"><div><p class="kicker">07 · Beyond Bloodborne</p><h2 id="elsewhere-title">Other ports worth knowing.</h2></div><p class="lede">Two familiar builds—Ocarina and Symphony—show how different technical routes can arrive at the same player-facing goal. Galaxy belongs in the same map, but at a different maturity point.</p></div>
+      <div class="project-grid">
+        <article class="project-card featured"><span class="project-number">01</span><p class="mini-kicker">Ocarina of Time</p><h3>Ship of Harkinian</h3><p>A mature native source port built from the Ocarina decomp: high FPS, widescreen, free-look, instant text, cutscene skips, accessibility, randomizer, mods, and online experiments.</p><div class="tag-row"><span>Decomp source port</span><span>Player-ready</span></div><a href="https://github.com/HarbourMasters/Shipwright">Official repository ↗</a></article>
+        <article class="project-card"><span class="project-number">02</span><p class="mini-kicker">Symphony of the Night</p><h3>SymphonyRecomp</h3><p>An open-beta PS1 recomp with widescreen room extension, scaling, texture replacement, language packs, shaders, randomizer, and QoL toggles.</p><div class="tag-row"><span>Static recomp</span><span>Open beta</span></div><a href="https://github.com/BlackLabelHQ/SymphonyRecomp">Official repository ↗</a></article>
+        <article class="project-card"><span class="project-number">03</span><p class="mini-kicker">Symphony of the Night</p><h3>NocturneRecomp</h3><p>A separate XBLA recomp for Windows, Linux, Mac, and Android, with launcher, save/mod management, randomizer hooks, native rendering, and regional assets when supplied.</p><div class="tag-row"><span>Static recomp</span><span>Multi-platform</span></div><a href="https://github.com/birabittoh/NocturneRecomp">Official repository ↗</a></article>
+        <article class="project-card"><span class="project-number">04</span><p class="mini-kicker">Symphony of the Night</p><h3>sotn-decomp</h3><p>The matching source reconstruction for PS1, PSP, and Saturn. It is the long-term source foundation, not the same thing as a finished player app.</p><div class="tag-row"><span>Matching decomp</span><span>In progress</span></div><a href="https://github.com/xeeynamo/sotn-decomp">Official repository ↗</a></article>
+        <article class="project-card"><span class="project-number">05</span><p class="mini-kicker">Super Mario Galaxy</p><h3>Nebula + Petari</h3><p>Petari is the Galaxy 1 decomp foundation. Nebula began with ahead-of-time recompilation and current mainline is a native source port with modern graphics, input, saves, and mods.</p><div class="tag-row"><span>Decomp + native port</span><span>Active</span></div><a href="https://github.com/keepvaibin/nebula">Nebula repository ↗</a></article>
+        <article class="project-card"><span class="project-number">06</span><p class="mini-kicker">Majora’s Mask</p><h3>Zelda 64: Recompiled</h3><p>N64 static recompilation with high FPS, ultrawide, dual-analog camera, gyro aim, autosaving, low input lag, instant loads, and a friendly mod system.</p><div class="tag-row"><span>Static recomp</span><span>Player-ready</span></div><a href="https://github.com/Zelda64Recomp/Zelda64Recomp">Official repository ↗</a></article>
+      </div>
+      <div class="qol-section"><div><p class="kicker">What these projects unlock</p><h3>The quality-of-life pattern</h3></div><div class="qol-list">
+        <p><b>Display</b><span>Correct high-FPS timing, ultrawide, integer scaling, modern AA/upscaling, HDR.</span></p>
+        <p><b>Control</b><span>Remapping, mouse look, right-stick camera, gyro, per-axis sensitivity, prompts.</span></p>
+        <p><b>Flow</b><span>Instant text, intro/cutscene skips, faster loads, autosave, portable profiles.</span></p>
+        <p><b>Access</b><span>Reduced flashes/wobble, UI scale, color/visibility options, alternate input.</span></p>
+        <p><b>Replay</b><span>Randomizers, practice tools, level select, speedrun presets, multiworld.</span></p>
+        <p><b>Create</b><span>Mod APIs, texture replacement, load order, patch toggles, debug cameras.</span></p>
+      </div></div>
+    </div></section>
+
+    <section class="section sources" id="sources" aria-labelledby="sources-title"><div class="shell sources-layout">
+      <div><p class="kicker">08 · Primary sources</p><h2 id="sources-title">Follow the projects, not a repost.</h2><p class="lede">Status and commands change quickly. These official repositories are the authority after this report’s date.</p></div>
+      <div class="source-list">
+        <a href="https://github.com/deadinside28/bloodborne_pc"><span>01</span><div><b>bbport repository</b><small>Architecture, requirements, controls, build/run</small></div><i>↗</i></a>
+        <a href="https://github.com/deadinside28/bloodborne_pc/releases/tag/0.7"><span>02</span><div><b>bbport 0.7</b><small>Official Windows/Linux packages + SHA256SUMS</small></div><i>↗</i></a>
+        <a href="https://github.com/deadinside28/bloodborne_pc/blob/master/docs/MODS.md"><span>03</span><div><b>bbport mods &amp; patches</b><small>Overlays, XML patches, load order</small></div><i>↗</i></a>
+        <a href="https://github.com/bloodborne-native/bloodborne-mac"><span>04</span><div><b>bloodborne-mac</b><small>Apple-silicon architecture and status</small></div><i>↗</i></a>
+        <a href="https://github.com/bloodborne-native/bloodborne-mac/releases/latest"><span>05</span><div><b>bloodborne-mac releases</b><small>Official ARM64 DMG and known issues</small></div><i>↗</i></a>
+        <a href="https://github.com/bloodborne-native/bloodborne-mac/blob/main/docs/guide/game-files.md"><span>06</span><div><b>Mac game-file guide</b><small>1.09 merge and validation</small></div><i>↗</i></a>
+        <a href="https://github.com/HarbourMasters/Shipwright"><span>07</span><div><b>Ship of Harkinian</b><small>Ocarina source-port comparison</small></div><i>↗</i></a>
+        <a href="https://github.com/BlackLabelHQ/SymphonyRecomp"><span>08</span><div><b>SymphonyRecomp</b><small>PS1 SOTN recomp comparison</small></div><i>↗</i></a>
+      </div>
+    </div></section>
+
+    <section class="legal-note"><div class="shell legal-grid"><div><span class="rune">ᛉ</span><h2>Tools and context.<br>Never the game.</h2></div><p>This guide hosts no game files, keys, firmware, SDKs, proprietary upscaler assets, or bypass tools. Use a copy you own and comply with local law. The projects are unofficial and unaffiliated with the rights holders named. Project features are linked to official repositories; the Bloodborne image was supplied by the guide’s requester.</p></div></section>
+  </main>
+  <footer class="site-footer"><div class="shell"><span>Bloodborne Port Field Guide</span><span>Checked 20 Nov 2026</span><a href="#top">Back to top ↑</a></div></footer>
+  <div class="toast" role="status" aria-live="polite" data-toast>Copied</div>
+</body>
+</html>
